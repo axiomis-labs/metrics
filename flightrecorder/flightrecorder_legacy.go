@@ -1,4 +1,6 @@
-package metrics
+//go:build !go1.25
+
+package flightrecorder
 
 import (
 	"context"
@@ -10,7 +12,7 @@ import (
 	"golang.org/x/exp/trace"
 )
 
-type TraceRecorder struct {
+type traceRecorderLegacy struct {
 	*trace.FlightRecorder
 
 	snapshotThreshold time.Duration
@@ -18,8 +20,8 @@ type TraceRecorder struct {
 
 // NewTraceRecorder creates new trace flight recorder that will continuously record latest execution trace in a circullar buffer
 // and snapshot it to file only if region takes more than snapshotThreshold
-func NewTraceRecorder(period, snapshotThreshold time.Duration, bufferSizeBytes int) *TraceRecorder {
-	tr := &TraceRecorder{
+func NewTraceRecorder(period, snapshotThreshold time.Duration, bufferSizeBytes int) TraceFlightRecorder {
+	tr := &traceRecorderLegacy{
 		FlightRecorder:    trace.NewFlightRecorder(),
 		snapshotThreshold: snapshotThreshold,
 	}
@@ -29,9 +31,14 @@ func NewTraceRecorder(period, snapshotThreshold time.Duration, bufferSizeBytes i
 	return tr
 }
 
+// Stop re-implements TraceFlightRecorder, since legacy FlightRecorder returns error
+func (tr *traceRecorderLegacy) Stop() {
+	_ = tr.FlightRecorder.Stop()
+}
+
 // StartRegion starts measuring execution time of a region and if it passes the snapshotThreshold
 // then it flushes recorder trace buffer to file
-func (tr TraceRecorder) StartRegion(tagName, tagValue string) (stopRegion func() error) {
+func (tr traceRecorderLegacy) StartRegion(tagName, tagValue string) (stopRegion func() error) {
 	start := time.Now()
 	_, task := rtrace.NewTask(context.Background(), fmt.Sprintf("%s=%s", tagName, tagValue))
 	return func() error {
