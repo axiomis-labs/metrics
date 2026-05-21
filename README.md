@@ -55,16 +55,6 @@ k.Meter(ctx).FuncError(ctx, "createTokenPair", err)
 k.Meter(ctx).Count("gas_used", tx.GasUsed(), metrics.TraceTag("tx_hash", tx.Hash())))
 ```
 
-## How to view metrics
-
-You need our fork of SigNoz and Docker:
-```
-git pull github.com:axiomis-labs/signoz.git
-git checkout main-inj
-./start.sh
-```
-
-Navigate to http://localhost:8080/ to check out metrics and traces from your local node.
 
 ## How to use the package
 
